@@ -31,7 +31,7 @@ devseat_kubectl_checksum: sha256:https://dl.k8s.io/release/v1.32.1/bin/linux/amd
 # CRI-Dockerd: https://github.com/Mirantis/cri-dockerd
 devseat_cri_dockerd_deb_download_url: https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.16/cri-dockerd_0.3.16.3-0.ubuntu-jammy_amd64.deb
 # devseat_cri_dockerd_deb_checksum: false
-devseat_cri_dockerd_rpm_download_url: https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.16/cri-dockerd-0.3.16-3.fc36.x86_64.rpm
+devseat_cri_dockerd_rpm_download_url: https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.16/cri-dockerd-0.3.16-3.fc35.x86_64.rpm
 # devseat_cri_dockerd_rpm_checksum: false
 
 # K9S: https://github.com/derailed/k9s/releases
