@@ -1,0 +1,58 @@
+---
+- name: golang | Download Golang
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_golang_download_url }}
+    checksum: >-
+      {{ devseat_golang_checksum }}
+    dest: /tmp/go.linux-amd64.tar.gz
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: golang_download
+  tags: golang
+
+- name: golang | Delete Golang in order to deploy new version
+  ansible.builtin.file:
+    state: absent
+    path: /opt/go
+  when: golang_download.changed # noqa: no-handler
+  become: true
+  tags: golang
+
+- name: golang | Create a directory for Golang binaries
+  ansible.builtin.file:
+    path: /opt/go/bin
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  tags: golang
+
+- name: golang | Extract and install Golang
+  ansible.builtin.unarchive:
+    src: /tmp/go.linux-amd64.tar.gz
+    dest: /opt
+    owner: root
+    group: root
+  become: true
+  tags: golang
+
+- name: golang | Add Golang to PATH for Bash
+  ansible.builtin.lineinfile:
+    path: >-
+      {{ ansible_env.HOME }}/.bashrc
+    regexp: '^export PATH=$PATH:/opt/go/bin'
+    line: export PATH=$PATH:/opt/go/bin
+  tags: golang
+
+- name: golang | Add Golang to PATH for ZSH
+  ansible.builtin.copy:
+    content: |
+      export PATH=$PATH:/opt/go/bin
+    dest: >-
+      {{ ansible_env.HOME }}/.oh-my-zsh/custom/golang.zsh
+    mode: '0644'
+  tags: golang

@@ -1,0 +1,178 @@
+---
+- name: basic | Create /home/<user>/.ssh folder
+  ansible.builtin.file:
+    path: >-
+      {{ ansible_env.HOME }}/.ssh
+    state: directory
+    mode: '0755'
+  tags: basic
+
+- name: basic | Create apt keyrings directory on Debian-based distributions
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+  tags: basic
+
+- name: basic | Update all packages on Debian-based distributions
+  ansible.builtin.apt:
+    name: "*"
+    state: latest
+    only_upgrade: true
+    update_cache: true
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: basic
+
+- name: basic | Update all packages on RHEL-based distributions
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_only: true
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: basic
+
+- name: basic | Configure /etc/updatedb.conf
+  ansible.builtin.copy:
+    src: updatedb.conf
+    dest: /etc/updatedb.conf
+    owner: root
+    group: root
+    mode: '0640'
+  become: true
+  tags: basic
+
+- name: basic | Install basic software/tools on Debian-based distributions
+  ansible.builtin.apt:
+    name:
+      - bzip2
+      - curl
+      - gcc
+      - jq
+      - make
+      - plocate
+      - ripgrep
+      - sshpass
+      - tar
+      - tmux
+      - wget
+      - xclip
+      - zip
+      - zsh
+    update_cache: true
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: basic
+
+- name: basic | Install basic software/tools on RHEL-based distributions
+  ansible.builtin.dnf:
+    name:
+      - bzip2
+      - curl
+      - fd-find
+      - gcc
+      - jq
+      - make
+      - mlocate
+      - ripgrep
+      - sshpass
+      - tar
+      - tmux
+      - wget
+      - zip
+      - zsh
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: basic
+
+- name: basic | Install oh-my-zsh
+  ansible.builtin.shell:
+    cmd: |
+      sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  failed_when: false
+  changed_when: false
+  tags: basic
+
+- name: basic | Install zsh-autosuggestions
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions.git
+    dest: >-
+      {{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-autosuggestions
+    update: true
+    version: >-
+      {{ devseat_zsh_autosuggestions_version_tag }}
+  tags: basic
+
+- name: basic | Configure Oh my Zsh ~/.zshrc
+  ansible.builtin.copy:
+    content: |
+      export ZSH="$HOME/.oh-my-zsh"
+      ZSH_THEME="robbyrussell"
+      plugins=(
+        git
+        ssh-agent
+      )
+
+      source $ZSH/oh-my-zsh.sh
+
+      if [[ -n $SSH_CONNECTION ]]; then
+        export EDITOR='vim'
+        export SUDO_EDITOR='vim'
+      else
+        export EDITOR='nvim'
+        export SUDO_EDITOR='/opt/neovim/bin/nvim'
+      fi
+    dest: >-
+      {{ ansible_env.HOME }}/.zshrc
+    mode: '0644'
+  tags: basic
+
+- name: basic | Configure default sudo editor
+  ansible.builtin.lineinfile:
+    path: >-
+      {{ ansible_env.HOME }}/.bashrc
+    regexp: '^export SUDO_EDITOR=.*'
+    line: export SUDO_EDITOR="/opt/neovim/bin/nvim"
+  tags: basic
+
+- name: basic | Configure SSH-agent
+  ansible.builtin.blockinfile:
+    path: >-
+      {{ ansible_env.HOME }}/.bashrc
+    block: |
+      env=~/.ssh/agent.env
+
+      agent_load_env () { test -f "$env" && . "$env" >| /dev/null ; }
+
+      agent_start () {
+          (umask 077; ssh-agent >| "$env")
+          . "$env" >| /dev/null ; }
+
+      agent_load_env
+
+      # agent_run_state: 0=agent running w/ key; 1=agent w/o key; 2=agent not running
+      agent_run_state=$(ssh-add -l >| /dev/null 2>&1; echo $?)
+
+      if [ ! "$SSH_AUTH_SOCK" ] || [ $agent_run_state = 2 ]; then
+          agent_start
+          ssh-add
+      elif [ "$SSH_AUTH_SOCK" ] && [ $agent_run_state = 1 ]; then
+          ssh-add
+      fi
+
+      unset env
+  tags: basic
+
+- name: basic | Set user shell to zsh
+  ansible.builtin.user:
+    name: >-
+      {{ ansible_env.USER }}
+    shell: >-
+      {{ devseat_default_shell }}
+  become: true
+  failed_when: false # TODO: Gives errors when ldap account.
+  tags: basic

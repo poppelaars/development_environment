@@ -1,0 +1,94 @@
+---
+- name: docker | Install Docker dependencies on Debian-based distributions
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+    update_cache: true
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: docker
+
+- name: docker | Install Docker dependencies on RHEL-based distributions
+  ansible.builtin.dnf:
+    name:
+      - dnf-plugins-core
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: docker
+
+- name: docker | Install Docker Apt signing key on Debian-based distributions
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    # checksum: false
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: docker
+
+- name: docker | Configure Docker repository on Debian-based distributions
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: docker
+
+- name: docker | Configure Docker repository on RHEL-based distributions
+  ansible.builtin.copy:
+    content: |
+      [docker-ce-stable]
+      name=Docker CE Stable - $basearch
+      baseurl=https://download.docker.com/linux/centos/$releasever/$basearch/stable
+      enabled=1
+      gpgcheck=1
+      gpgkey=https://download.docker.com/linux/centos/gpg
+    dest: /etc/yum.repos.d/docker-ce.repo
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: docker
+
+- name: docker | Install Docker software/tools on Debian-based distributions
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    update_cache: true
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: docker
+
+- name: docker | Install Docker software/tools on RHEL-based distributions
+  ansible.builtin.dnf:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: docker
+
+- name: docker | Add user to docker group
+  ansible.builtin.user:
+    name: >-
+      {{ ansible_env.USER }}
+    groups: docker
+    append: true
+  become: true
+  tags: docker

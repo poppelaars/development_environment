@@ -1,0 +1,71 @@
+---
+- name: Determine if we are on WSL (Windows Subsystem for Linux)
+  ansible.builtin.stat:
+    path: /proc/sys/fs/binfmt_misc/WSLInterop
+  register: detect_is_wsl
+  tags: always
+
+- name: Include task for basic configuration
+  ansible.builtin.include_tasks:
+    file: basic.yml
+  tags: basic
+
+- name: Include task for desktop configuration
+  ansible.builtin.include_tasks:
+    file: desktop.yml
+  tags: desktop
+
+- name: Include task to setup Git
+  ansible.builtin.include_tasks:
+    file: git.yml
+  tags: git
+
+- name: Include task to setup Python
+  ansible.builtin.include_tasks:
+    file: python.yml
+  tags: python
+
+- name: Include task to setup Golang
+  ansible.builtin.include_tasks:
+    file: golang.yml
+  tags: golang
+
+- name: Include task to setup Ansible
+  ansible.builtin.include_tasks:
+    file: ansible.yml
+  tags: ansible
+
+- name: Include task to setup lsp
+  ansible.builtin.include_tasks:
+    file: lua.yml
+  tags: lua
+
+- name: Include task to setup Neovim
+  ansible.builtin.include_tasks:
+    file: neovim.yml
+  tags: neovim
+
+- name: Include task to setup Docker
+  ansible.builtin.include_tasks:
+    file: docker.yml
+  tags: docker
+
+- name: Include task to setup Kubernetes
+  ansible.builtin.include_tasks:
+    file: kubernetes.yml
+  tags: kubernetes
+
+- name: Include task for hypervisor configuration
+  ansible.builtin.include_tasks:
+    file: virtualization.yml
+  tags: virtualization
+
+- name: Include task to setup VScode
+  ansible.builtin.include_tasks:
+    file: vscode.yml
+  tags: vscode
+
+- name: Include task to setup Slack
+  ansible.builtin.include_tasks:
+    file: slack.yml
+  tags: slack

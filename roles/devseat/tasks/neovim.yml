@@ -1,0 +1,60 @@
+---
+- name: neovim | Download Neovim
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_neovim_download_url }}
+    checksum: >-
+      {{ devseat_neovim_checksum }}
+    dest: /tmp/nvim-linux64.tar.gz
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: neovim_download
+  tags: neovim
+
+- name: neovim | Delete Neovim in order to deploy new version
+  ansible.builtin.file:
+    state: absent
+    path: /opt/neovim
+  when: neovim_download.changed # noqa: no-handler
+  become: true
+  tags: neovim
+
+- name: neovim | Create a directory for Neovim binaries
+  ansible.builtin.file:
+    path: /opt/neovim
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  tags: neovim
+
+- name: neovim | Extract and install Neovim
+  ansible.builtin.unarchive:
+    src: /tmp/nvim-linux64.tar.gz
+    dest: /opt/neovim
+    extra_opts:
+      - --strip-components=1
+    owner: root
+    group: root
+  become: true
+  tags: neovim
+
+- name: neovim | Add Neovim to path for Bash
+  ansible.builtin.lineinfile:
+    path: >-
+      {{ ansible_env.HOME }}/.bashrc
+    regexp: '^export PATH=$PATH:/opt/neovim/bin'
+    line: export PATH=$PATH:/opt/neovim/bin
+  tags: neovim
+
+- name: neovim | Add Neovim to PATH for ZSH
+  ansible.builtin.copy:
+    content: |
+      export PATH=$PATH:/opt/neovim/bin
+    dest: >-
+      {{ ansible_env.HOME }}/.oh-my-zsh/custom/neovim.zsh
+    mode: '0644'
+  tags: neovim

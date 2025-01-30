@@ -1,0 +1,29 @@
+---
+- name: ansible | Install npm on Debian-based distributions
+  ansible.builtin.apt:
+    name:
+      - nodejs
+      - npm
+    update_cache: true
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: ansible
+
+- name: ansible | Install npm on RHEL-based distributions
+  ansible.builtin.dnf:
+    name:
+      - nodejs
+      - npm
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: ansible
+
+- name: ansible | Download and install Ansible language server
+  community.general.npm:
+    name: ansible-language-server
+    global: true
+    state: present
+  become: true
+  tags: ansible

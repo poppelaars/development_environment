@@ -1,0 +1,83 @@
+---
+- name: git | Install Git on Debian-based distributions
+  ansible.builtin.apt:
+    name:
+      - git
+    update_cache: true
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: git
+
+- name: git | Install Git on RHEL-based distributions
+  ansible.builtin.dnf:
+    name:
+      - git
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: git
+
+- name: git | Read user.email from global git config
+  community.general.git_config_info:
+    name: user.email
+    scope: global
+  register: result_git_user_email
+  tags: git
+
+- name: git | Check if user.email is set in global git config
+  ansible.builtin.fail:
+    msg: >-
+      The variable user.email is not configured in global git config. Please
+      configure this manually or set ansible variable 'git_user_email'.
+  when: result_git_user_email.config_value == "" and git_user_email == ""
+  tags: git
+
+- name: git | Configuring user.email in global git config
+  community.general.git_config:
+    name: user.email
+    state: present
+    scope: global
+    value: >-
+      {{ git_user_email | default("") }}
+  tags: git
+
+- name: git | Read user.name from global git config
+  community.general.git_config_info:
+    name: user.name
+    scope: global
+  register: result_git_user_name
+  tags: git
+
+- name: git | Check if user.name is set in global git config
+  ansible.builtin.fail:
+    msg: >-
+      The variable user.name is not configured in global git config. Please
+      configure this manually or set ansible variable 'git_user_name'.
+  when: result_git_user_name.config_value == "" and git_user_name == ""
+  tags: git
+
+- name: git | Configuring user.name in global git config
+  community.general.git_config:
+    name: user.name
+    state: present
+    scope: global
+    value: >-
+      {{ git_user_name | default("") }}
+  tags: git
+
+- name: git | Configure git init.defaultBranch to main
+  community.general.git_config:
+    name: init.defaultBranch
+    state: present
+    scope: global
+    value: main
+  tags: git
+
+- name: git | Configure git core.editor to nvim
+  community.general.git_config:
+    name: core.editor
+    state: present
+    scope: global
+    value: nvim
+  tags: git

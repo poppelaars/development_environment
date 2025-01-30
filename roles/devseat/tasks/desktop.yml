@@ -1,0 +1,13 @@
+---
+- name: desktop | Install desktop for Debian-based distributions
+  ansible.builtin.apt:
+    pkg:
+      - ubuntu-desktop-minimal
+      - xrdp
+    state: present
+    update_cache: true
+  when: is_wsl is false
+  become: true
+  tags: desktop
+
+# TODO: RHEL support

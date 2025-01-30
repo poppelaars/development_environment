@@ -1,0 +1,202 @@
+---
+- name: virtualization | Get CPU information from /proc/cpuinfo
+  ansible.builtin.shell: >-
+    egrep -c '(vmx|svm)' /proc/cpuinfo
+  register: virtualization_result
+  changed_when: false
+  failed_when: false # egrep of 0 gives exit 1
+  become: true
+  tags: virtualization
+
+- name: virtualization | Determine if CPU supports virtualization
+  ansible.builtin.set_fact:
+    virtualization_support: >-
+      {{ (virtualization_result.stdout | int) > 0 }}
+  tags: virtualization
+
+- name: virtualization | Create apt keyrings directory on Debian-based distributions
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+  tags: virtualization
+
+- name: virtualization | Download Hashicorp public key for Debian-based distributions
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /etc/apt/keyrings/hashicorp.asc
+    mode: '0644'
+  become: true
+  tags: virtualization
+
+- name: virtualization | Add Hashicorp repository on Debian-based distributions
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch=amd64 signed-by=/etc/apt/keyrings/hashicorp.asc]
+      https://apt.releases.hashicorp.com
+      {{ ansible_distribution_release }}
+      main
+    state: present
+    update_cache: true
+  become: true
+  tags: virtualization
+
+- name: virtualization | Install virtualization on Debian-based distributions
+  ansible.builtin.apt:
+    pkg:
+      - vagrant
+      - ruby-rubygems
+      - qemu-kvm
+      - libvirt-clients
+      - libvirt-daemon-system
+      - bridge-utils
+      - virtinst
+      - libvirt-daemon
+      - virt-top
+      - libguestfs-tools
+      - libosinfo-bin
+      - qemu-system
+      - tuned
+      - libxslt-dev
+      - libxml2-dev
+      - libvirt-dev
+      - zlib1g-dev
+      - ruby-dev
+      - ruby-libvirt
+      - spice-vdagent
+      - ebtables
+      - dnsmasq-base
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts['os_family'] == "Debian" and virtualization_support
+  tags: virtualization
+
+# TODO: RHEL support
+
+# - name: virtualization | Install virtualization dependencies on RHEL-based distributions
+#   ansible.builtin.dnf:
+#     name:
+#       - 'dnf-command(config-manager)'
+#       - epel-release
+#     state: present
+#   become: true
+#   when: ansible_facts['os_family'] == "RedHat" and virtualization_support
+#   tags: virtualization
+
+# - name: virtualization | Configure CRB repository
+#   ansible.builtin.shell: |
+#     dnf config-manager --set-enabled crb
+#   changed_when: false
+#   become: true
+#   when: ansible_facts['os_family'] == "RedHat" and virtualization_support
+#   tags: virtualization
+
+# - name: virtualization | Install virtualization dependencies on RHEL-based distributions
+#   ansible.builtin.dnf:
+#     name:
+#       - '@Virtualization Hypervisor'
+#       - '@Virtualization Tools'
+#       - '@Development Tools'
+#       - libvirt-devel
+#       - bridge-utils
+#     state: present
+#   become: true
+#   when: ansible_facts['os_family'] == "RedHat" and virtualization_support
+#   tags: virtualization
+
+- name: virtualization | Add the user to libvirt and kvm group
+  ansible.builtin.user:
+    name: >-
+      {{ ansible_env.USER }}
+    groups:
+      - libvirt
+      - kvm
+    append: true
+  become: true
+  when: virtualization_support
+  tags: virtualization
+
+- name: virtualization | Enable and start libvirtd service
+  ansible.builtin.service:
+    name: libvirtd
+    state: started
+    enabled: true
+  become: true
+  when: virtualization_support
+  tags: virtualization
+
+- name: virtualization | Enable and start tuned service
+  ansible.builtin.service:
+    name: tuned
+    state: started
+    enabled: true
+  become: true
+  when: virtualization_support
+  tags: virtualization
+
+- name: virtualization | Tune virtualization performance
+  ansible.builtin.shell:
+    cmd: |
+      tuned-adm profile virtual-guest
+  become: true
+  changed_when: false
+  when: virtualization_support
+  tags: virtualization
+
+- name: virtualization | Install Vagrant plugins
+  ansible.builtin.shell:
+    cmd: |
+      vagrant plugin install {{ plugin.name }}-{{ plugin.version }}
+  loop:
+    - name: vagrant-mutate
+      version: 1.2.0
+    - name: vagrant-libvirt
+      version: 0.12.2
+  loop_control:
+    loop_var: plugin
+    label: >-
+      {%- if 'version' in plugin -%}
+      {{ plugin.name }}=={{ plugin.version }}{%- else -%}
+      {{ plugin.name }}{%- endif -%}
+  become: true
+  changed_when: false
+  tags: virtualization
+
+- name: virtualization | Configure default vagrant provider for Bash
+  ansible.builtin.lineinfile:
+    path: >-
+      {{ ansible_env.HOME }}/.bashrc
+    regexp: '^export VAGRANT_DEFAULT_PROVIDER=.*'
+    line: export VAGRANT_DEFAULT_PROVIDER="libvirt"
+  when: virtualization_support
+  tags: virtualization
+
+- name: virtualization | Configure default vagrant provider for ZSH
+  ansible.builtin.copy:
+    content: |
+      export VAGRANT_DEFAULT_PROVIDER="libvirt"
+    dest: >-
+      {{ ansible_env.HOME }}/.oh-my-zsh/custom/libvirt.zsh
+    mode: '0644'
+  when: virtualization_support
+  tags: virtualization
+
+- name: virtualization | Configure Vagrant root certificate authorities for Bash
+  ansible.builtin.lineinfile:
+    path: >-
+      {{ ansible_env.HOME }}/.bashrc
+    regexp: '^export SSL_CERT_FILE=.*'
+    line: export SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+  tags: virtualization
+
+- name: virtualization | Configure Vagrant root certificate authorities for ZSH
+  ansible.builtin.copy:
+    content: |
+      export SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+    dest: >-
+      {{ ansible_env.HOME }}/.oh-my-zsh/custom/vagrant-ca.zsh
+    mode: '0644'
+  when: virtualization_support
+  tags: virtualization

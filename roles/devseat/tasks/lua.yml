@@ -1,0 +1,68 @@
+---
+- name: lua | Download Lua language server
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_lua_lsp_download_url }}
+    # checksum: >-
+    #   {{ devseat_lua_lsp_checksum }}
+    dest: /tmp/lua-language-server-linux-x64.tar.gz
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: lua_lsp_download
+  tags: lua
+
+- name: lua | Delete Lua LSP in order to deploy new version
+  ansible.builtin.file:
+    state: absent
+    path: /opt/lua-lsp
+  when: lua_lsp_download.changed # noqa: no-handler
+  become: true
+  tags: lua
+
+- name: lua | Create a directory for LSP
+  ansible.builtin.file:
+    path: /opt/lua-lsp
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  tags: lua
+
+- name: lua | Create a directory for Lua LSP logging
+  ansible.builtin.file:
+    path: /opt/lua-lsp/log
+    state: directory
+    owner: root
+    group: root
+    mode: '1777'
+  become: true
+  tags: lua
+
+- name: lua | Extract and install Lua Language Server
+  ansible.builtin.unarchive:
+    src: /tmp/lua-language-server-linux-x64.tar.gz
+    dest: /opt/lua-lsp
+    owner: root
+    group: root
+  become: true
+  tags: lua
+
+- name: lua | Add Lua LSP to path for Bash
+  ansible.builtin.lineinfile:
+    path: >-
+      {{ ansible_env.HOME }}/.bashrc
+    regexp: '^export PATH=$PATH:/opt/lua-lsp/bin'
+    line: export PATH=$PATH:/opt/lua-lsp/bin
+  tags: lua
+
+- name: lua | Add Lua to PATH for ZSH
+  ansible.builtin.copy:
+    content: |
+      export PATH=$PATH:/opt/lua-lsp/bin
+    dest: >-
+      {{ ansible_env.HOME }}/.oh-my-zsh/custom/lua.zsh
+    mode: '0644'
+  tags: lua

@@ -1,0 +1,10 @@
+---
+- name: Development environment
+  hosts: localhost
+  connection: paramiko
+  become: false
+  gather_facts: true
+  tasks:
+    - name: Setup development environment
+      ansible.builtin.import_role:
+        name: devseat

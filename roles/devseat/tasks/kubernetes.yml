@@ -1,0 +1,206 @@
+---
+- name: kubernetes | Install Kubernetes software/tools on Debian-based distributions
+  ansible.builtin.apt:
+    name:
+      - socat
+      - conntrack
+    update_cache: true
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: kubernetes
+
+- name: kubernetes | Install Kubernetes software/tools on RHEL-based distributions
+  ansible.builtin.dnf:
+    name:
+      - socat
+      - conntrack-tools
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: kubernetes
+
+- name: kubernetes | Download and install Minikube
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_minikube_download_url }}
+    # checksum: >-
+    #   {{ devseat_minikube_checksum }}
+    dest: /usr/local/bin/minikube
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  tags: kubernetes
+
+# https://ubuntu.com/tutorials/install-a-local-kubernetes-with-microk8s#2-deploying-microk8s
+- name: kubernetes | Install MicroK8s on Debian-based distributions
+  community.general.snap:
+    name: microk8s
+    channel: latest/stable
+    classic: true
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: kubernetes
+
+- name: kubernetes | Download CRI-Dockerd for Debian-based distributions
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_cri_dockerd_deb_download_url }}
+    # checksum: >-
+    #   {{ devseat_cri_dockerd_deb_checksum }}
+    dest: /tmp/cri-dockerd_ubuntu-jammy_amd64.deb
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: cri_dockerd_deb_download
+  tags: kubernetes
+
+- name: kubernetes | Install CRI-Dockerd for Debian-based distributions
+  ansible.builtin.apt:
+    deb: /tmp/cri-dockerd_ubuntu-jammy_amd64.deb
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian" and cri_dockerd_deb_download.changed # noqa: no-handler
+  tags: kubernetes
+
+- name: kubernetes | Download CRI-Dockerd for RHEL-based distributions
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_cri_dockerd_rpm_download_url }}
+    # checksum: >-
+    #   {{ devseat_cri_dockerd_deb_checksum }}
+    dest: /tmp/cri-dockerd-fc36.x86_64.rpm
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: cri_dockerd_rpm_download
+  tags: kubernetes
+
+- name: kubernetes | Install CRI-Dockerd for RHEL-based distributions
+  ansible.builtin.dnf:
+    name: /tmp/cri-dockerd-fc36.x86_64.rpm
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat" and cri_dockerd_rpm_download.changed # noqa: no-handler
+  tags: kubernetes
+
+- name: kubernetes | Download CNI-plugins
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_cni_plugins_download_url }}
+    checksum: >-
+      {{ devseat_cni_plugins_checksum }}
+    dest: /tmp/cni-plugins-linux-amd64.tgz
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: cni_plugins_download
+  tags: kubernetes
+
+- name: kubernetes | Delete CNI-plugins in order to deploy new version
+  ansible.builtin.file:
+    state: absent
+    path: /opt/cni/bin
+  when: cni_plugins_download.changed # noqa: no-handler
+  become: true
+  tags: kubernetes
+
+- name: kubernetes | Create a directory for CNI-plugins
+  ansible.builtin.file:
+    path: /opt/cni/bin
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  tags: kubernetes
+
+- name: kubernetes | Create a directory for CNI configuration
+  ansible.builtin.file:
+    path: /etc/cni/net.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  tags: kubernetes
+
+- name: kubernetes | Extract and install CNI-plugins
+  ansible.builtin.unarchive:
+    src: /tmp/cni-plugins-linux-amd64.tgz
+    dest: /opt/cni/bin
+    owner: root
+    group: root
+  when: cni_plugins_download.changed # noqa: no-handler
+  become: true
+  tags: kubernetes
+
+- name: kubernetes | Download and install Kubectl
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_kubectl_download_url }}
+    checksum: >-
+      {{ devseat_kubectl_checksum }}
+    dest: /usr/local/bin/kubectl
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  tags: kubernetes
+
+- name: kubernetes | Download Helm
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_helm_download_url }}
+    checksum: >-
+      {{ devseat_helm_checksum }}
+    dest: /tmp/helm-linux-amd64.tar.gz
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  tags: kubernetes
+
+- name: kubernetes | Extract and install Helm
+  ansible.builtin.unarchive:
+    src: /tmp/helm-linux-amd64.tar.gz
+    dest: /usr/local/bin
+    include:
+      - linux-amd64/helm
+    extra_opts:
+      - --strip-components=1
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  tags: kubernetes
+
+- name: kubernetes | Download K9S
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_k9s_download_url }}
+    # checksum: >-
+    #   {{ devseat_k9s_checksum }}
+    dest: /tmp/k9s_Linux_amd64.tar.gz
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  tags: kubernetes
+
+- name: kubernetes | Extract and install K9S
+  ansible.builtin.unarchive:
+    src: /tmp/k9s_Linux_amd64.tar.gz
+    dest: /usr/local/bin
+    include:
+      - k9s
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  tags: kubernetes

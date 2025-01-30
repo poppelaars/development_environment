@@ -1,0 +1,47 @@
+---
+- name: vscode | Import vscode key
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://packages.microsoft.com/keys/microsoft.asc
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: vscode
+
+- name: vscode | Configure VScode repository
+  ansible.builtin.copy:
+    content: |
+      [code]
+      name=Visual Studio Code
+      baseurl=https://packages.microsoft.com/yumrepos/vscode
+      enabled=1
+      gpgcheck=1
+      gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+    dest: /etc/yum.repos.d/vscode.repo
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: vscode
+
+- name: vscode | Install VScode software/tools
+  ansible.builtin.dnf:
+    name:
+      - code
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: vscode
+
+- name: vscode | Install VScode extensions
+  ansible.builtin.shell:
+    cmd: |
+      code --install-extension {{ vscode_extension }}
+  changed_when: false
+  loop: >-
+    {{ devseat_vscode_extensions }}
+  loop_control:
+    loop_var: vscode_extension
+    label: >-
+      {{ vscode_extension }}
+  tags: vscode
