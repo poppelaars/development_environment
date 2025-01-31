@@ -17,3 +17,23 @@ virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+## Microk8s
+
+```bash
+sudo microk8s status --wait-ready
+sudo microk8s enable dashboard
+sudo microk8s enable dns
+sudo microk8s enable registry
+sudo microk8s enable istio
+sudo microk8s reset --destroy-storage
+```
+
+Create kubectl config:
+
+```bash
+cd $HOME
+mkdir .kube
+cd .kube
+microk8s config > config
+```

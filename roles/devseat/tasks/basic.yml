@@ -13,6 +13,7 @@
     state: directory
     mode: '0755'
   become: true
+  when: ansible_facts['os_family'] == "Debian"
   tags: basic
 
 - name: basic | Update all packages on Debian-based distributions

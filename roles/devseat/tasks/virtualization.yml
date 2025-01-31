@@ -4,7 +4,7 @@
     egrep -c '(vmx|svm)' /proc/cpuinfo
   register: virtualization_result
   changed_when: false
-  failed_when: false # egrep of 0 gives exit 1
+  failed_when: false # egrep output of 0 gives exit 1
   become: true
   tags: virtualization
 
@@ -20,6 +20,7 @@
     state: directory
     mode: '0755'
   become: true
+  when: ansible_facts['os_family'] == "Debian" and virtualization_support
   tags: virtualization
 
 - name: virtualization | Download Hashicorp public key for Debian-based distributions
@@ -28,6 +29,7 @@
     dest: /etc/apt/keyrings/hashicorp.asc
     mode: '0644'
   become: true
+  when: ansible_facts['os_family'] == "Debian" and virtualization_support
   tags: virtualization
 
 - name: virtualization | Add Hashicorp repository on Debian-based distributions
@@ -40,6 +42,7 @@
     state: present
     update_cache: true
   become: true
+  when: ansible_facts['os_family'] == "Debian" and virtualization_support
   tags: virtualization
 
 - name: virtualization | Install virtualization on Debian-based distributions
@@ -148,12 +151,9 @@
 - name: virtualization | Install Vagrant plugins
   ansible.builtin.shell:
     cmd: |
-      vagrant plugin install {{ plugin.name }}-{{ plugin.version }}
-  loop:
-    - name: vagrant-mutate
-      version: 1.2.0
-    - name: vagrant-libvirt
-      version: 0.12.2
+      vagrant plugin install {{ plugin.name }} --plugin-version {{ plugin.version }}
+  loop: >-
+    {{ devseat_vagrant_plugins }}
   loop_control:
     loop_var: plugin
     label: >-
@@ -161,6 +161,7 @@
       {{ plugin.name }}=={{ plugin.version }}{%- else -%}
       {{ plugin.name }}{%- endif -%}
   become: true
+  when: virtualization_support
   changed_when: false
   tags: virtualization
 
@@ -189,6 +190,7 @@
       {{ ansible_env.HOME }}/.bashrc
     regexp: '^export SSL_CERT_FILE=.*'
     line: export SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+  when: virtualization_support
   tags: virtualization
 
 - name: virtualization | Configure Vagrant root certificate authorities for ZSH

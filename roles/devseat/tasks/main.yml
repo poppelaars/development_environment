@@ -5,6 +5,12 @@
   register: detect_is_wsl
   tags: always
 
+- name: Configure basic facts
+  ansible.builtin.set_fact:
+    is_wsl: >-
+      {{ detect_is_wsl.stat.exists }}
+  tags: always
+
 - name: Include task for basic configuration
   ansible.builtin.include_tasks:
     file: basic.yml

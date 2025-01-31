@@ -31,8 +31,12 @@ devseat_kubectl_checksum: sha256:https://dl.k8s.io/release/v1.32.1/bin/linux/amd
 # CRI-Dockerd: https://github.com/Mirantis/cri-dockerd
 devseat_cri_dockerd_deb_download_url: https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.16/cri-dockerd_0.3.16.3-0.ubuntu-jammy_amd64.deb
 # devseat_cri_dockerd_deb_checksum: false
-devseat_cri_dockerd_rpm_download_url: https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.16/cri-dockerd-0.3.16-3.fc36.x86_64.rpm
+devseat_cri_dockerd_rpm_download_url: https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.16/cri-dockerd-0.3.16-3.fc35.x86_64.rpm
 # devseat_cri_dockerd_rpm_checksum: false
+
+# CRICTL: https://github.com/kubernetes-sigs/cri-tools
+devseat_crictl_download_url: https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.32.0/crictl-v1.32.0-linux-amd64.tar.gz
+devseat_crictl_checksum: sha512:https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.32.0/crictl-v1.32.0-linux-amd64.tar.gz.sha512
 
 # K9S: https://github.com/derailed/k9s/releases
 devseat_k9s_download_url: https://github.com/derailed/k9s/releases/download/v0.32.7/k9s_Linux_amd64.tar.gz
@@ -45,6 +49,13 @@ devseat_minikube_download_url: https://github.com/kubernetes/minikube/releases/l
 # Slack: https://slack.com/downloads/linux
 devseat_slack_deb_download_url: https://downloads.slack-edge.com/desktop-releases/linux/x64/4.41.105/slack-desktop-4.41.105-amd64.deb
 devseat_slack_rpm_download_url: https://downloads.slack-edge.com/desktop-releases/linux/x64/4.41.105/slack-4.41.105-0.1.el8.x86_64.rpm
+
+# Vagrant plugins
+devseat_vagrant_plugins:
+  - name: vagrant-mutate
+    version: 1.2.0
+  - name: vagrant-libvirt
+    version: 0.12.2
 
 # VScode marketplace: https://marketplace.visualstudio.com/vscode
 devseat_vscode_extensions:
@@ -87,3 +98,4 @@ devseat_vscode_extensions:
   - rust-lang.rust-analyzer
   - shardulm94.trailing-spaces
   - streetsidesoftware.code-spell-checker
+  - tal7aouy.rainbow-bracket
