@@ -151,12 +151,9 @@
 - name: virtualization | Install Vagrant plugins
   ansible.builtin.shell:
     cmd: |
-      vagrant plugin install {{ plugin.name }}-{{ plugin.version }}
-  loop:
-    - name: vagrant-mutate
-      version: 1.2.0
-    - name: vagrant-libvirt
-      version: 0.12.2
+      vagrant plugin install {{ plugin.name }} --plugin-version {{ plugin.version }}
+  loop: >-
+    {{ devseat_vagrant_plugins }}
   loop_control:
     loop_var: plugin
     label: >-
