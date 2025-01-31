@@ -4,5 +4,6 @@
             "column": 80,
             "color": "#ff0000"
         },
-    ]
+    ],
+    "ansible.python.interpreterPath": "/bin/python3"
 }
