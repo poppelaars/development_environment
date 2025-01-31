@@ -44,6 +44,16 @@
   when: ansible_facts['os_family'] == "Debian"
   tags: kubernetes
 
+- name: kubernetes | Add user to microk8s group for Debian-based distributions
+  ansible.builtin.user:
+    name: >-
+      {{ ansible_env.USER }}
+    groups: microk8s
+    append: true
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: kubernetes
+
 - name: kubernetes | Download CRI-Dockerd for Debian-based distributions
   ansible.builtin.get_url:
     url: >-
@@ -139,6 +149,28 @@
     owner: root
     group: root
   when: cni_plugins_download.changed # noqa: no-handler
+  become: true
+  tags: kubernetes
+
+- name: kubernetes | Download CRICTL
+  ansible.builtin.get_url:
+    url: >-
+      {{ devseat_crictl_download_url }}
+    checksum: >-
+      {{ devseat_crictl_checksum }}
+    dest: /tmp/crictl-linux-amd64.tar.gz
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  tags: kubernetes
+
+- name: kubernetes | Unarchive CRICTL
+  ansible.builtin.unarchive:
+    src: >-
+      /tmp/crictl-linux-amd64.tar.gz
+    dest: /usr/local/bin
+    creates: /usr/local/bin/crictl
   become: true
   tags: kubernetes
 
