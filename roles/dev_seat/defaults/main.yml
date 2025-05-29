@@ -1,0 +1,69 @@
+---
+dev_seat_default_shell: /bin/zsh
+
+# ZSH autosuggestions: https://github.com/zsh-users/zsh-autosuggestions
+dev_seat_zsh_autosuggestions_version_tag: v0.7.1
+
+# Golang: https://go.dev/dl/
+dev_seat_golang_download_url: https://go.dev/dl/go1.24.3.linux-amd64.tar.gz
+dev_seat_golang_checksum: sha256:3333f6ea53afa971e9078895eaa4ac7204a8c6b5c68c10e6bc9a33e8e391bdd8
+
+# LSP: https://github.com/LuaLS/lua-language-server
+dev_seat_lua_lsp_download_url: https://github.com/LuaLS/lua-language-server/releases/download/3.14.0/lua-language-server-3.14.0-linux-x64.tar.gz
+# dev_seat_lua_lsp_checksum: false
+
+# Neovim: https://github.com/neovim/neovim
+dev_seat_neovim_download_url: https://github.com/neovim/neovim/releases/download/v0.11.1/nvim-linux-x86_64.tar.gz
+dev_seat_neovim_checksum: sha256:92ecb2dbdfbd0c6d79b522e07c879f7743c5d395d0a4f13b0d4f668f8565527a
+
+# Minikube: https://minikube.sigs.k8s.io/docs/start/
+dev_seat_minikube_download_url: https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+# dev_seat_minikube_checksum: false
+
+# CRI-Dockerd: https://github.com/Mirantis/cri-dockerd
+dev_seat_cri_dockerd_deb_download_url: https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.17/cri-dockerd_0.3.17.3-0.ubuntu-jammy_amd64.deb
+# dev_seat_cri_dockerd_deb_checksum: false
+dev_seat_cri_dockerd_rpm_download_url: https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.17/cri-dockerd-0.3.17-3.fc36.x86_64.rpm
+# dev_seat_cri_dockerd_rpm_checksum: false
+
+# CNI-plugins: https://github.com/containernetworking/plugins/
+dev_seat_cni_plugins_download_url: https://github.com/containernetworking/plugins/releases/download/v1.7.1/cni-plugins-linux-amd64-v1.7.1.tgz
+dev_seat_cni_plugins_checksum: sha512:https://github.com/containernetworking/plugins/releases/download/v1.7.1/cni-plugins-linux-amd64-v1.7.1.tgz.sha512
+
+# Kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+dev_seat_kubectl_download_url: https://dl.k8s.io/release/v1.33.1/bin/linux/amd64/kubectl
+dev_seat_kubectl_checksum: sha256:https://dl.k8s.io/release/v1.33.1/bin/linux/amd64/kubectl.sha256
+
+# Helm: https://github.com/helm/helm/releases/
+dev_seat_helm_download_url: https://get.helm.sh/helm-v3.18.1-linux-amd64.tar.gz
+dev_seat_helm_checksum: sha256:https://get.helm.sh/helm-v3.18.1-linux-amd64.tar.gz.sha256sum
+
+# K9S: https://github.com/derailed/k9s/releases
+dev_seat_k9s_download_url: https://github.com/derailed/k9s/releases/download/v0.50.6/k9s_Linux_amd64.tar.gz
+# dev_seat_k9s_checksum: false
+
+# Slack: https://slack.com/downloads/linux
+dev_seat_slack_deb_download_url: https://downloads.slack-edge.com/desktop-releases/linux/x64/4.43.51/slack-desktop-4.43.51-amd64.deb
+dev_seat_slack_rpm_download_url: https://downloads.slack-edge.com/desktop-releases/linux/x64/4.43.51/slack-4.43.51-0.1.el8.x86_64.rpm
+
+dev_seat_vagrant_plugins:
+  - name: vagrant-libvirt
+    version: 0.12.2
+    url: https://rubygems.org/gems/vagrant-libvirt
+  - name: vagrant-mutate
+    version: 1.2.0
+    url: https://rubygems.org/gems/vagrant-mutate
+
+# VScode marketplace: https://marketplace.visualstudio.com/vscode
+dev_seat_vscode_extensions:
+  - ms-vscode.remote-explorer
+  - ms-vscode-remote.remote-containers
+  - ms-vscode-remote.remote-ssh
+  - ms-vscode-remote.remote-ssh-edit
+  - ms-vscode.remote-repositories
+  - ms-vscode.remote-server
+  - ms-vscode-remote.vscode-remote-extensionpack
+  - ms-vscode.wordcount
+  - oderwat.indent-rainbow
+  - shardulm94.trailing-spaces
+  - streetsidesoftware.code-spell-checker

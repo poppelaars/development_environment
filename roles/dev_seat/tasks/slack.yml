@@ -2,9 +2,9 @@
 - name: slack | Download Slack for Debian-based distributions
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_slack_deb_download_url }}
+      {{ dev_seat_slack_deb_download_url }}
     # checksum: >-
-    #   {{ devseat_slack_deb_checksum }}
+    #   {{ dev_seat_slack_deb_checksum }}
     dest: /tmp/slack-desktop-amd64.deb
     owner: root
     group: root
@@ -19,15 +19,17 @@
     deb: /tmp/slack-desktop-amd64.deb
     state: present
   become: true
-  when: ansible_facts['os_family'] == "Debian" and slack_deb_download.changed # noqa: no-handler
+  when:
+    - ansible_facts['os_family'] == "Debian"
+    - slack_deb_download.changed  # noqa: no-handler
   tags: slack
 
 - name: slack | Download Slack for RHEL-based distributions
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_slack_rpm_download_url }}
+      {{ dev_seat_slack_rpm_download_url }}
     # checksum: >-
-    #   {{ devseat_slack_rpm_checksum }}
+    #   {{ dev_seat_slack_rpm_checksum }}
     dest: /tmp/slack-x86_64.rpm
     owner: root
     group: root
@@ -42,5 +44,7 @@
     name: /tmp/slack-x86_64.rpm
     state: present
   become: true
-  when: ansible_facts['os_family'] == "RedHat" and slack_rpm_download.changed # noqa: no-handler
+  when:
+    - ansible_facts['os_family'] == "RedHat"
+    - slack_rpm_download.changed  # noqa: no-handler
   tags: slack

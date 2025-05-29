@@ -27,3 +27,20 @@
     state: present
   become: true
   tags: ansible
+
+- name: ansible | Configure Ansible collections path for Bash
+  ansible.builtin.lineinfile:
+    path: >-
+      {{ ansible_env.HOME }}/.bashrc
+    regexp: '^export ANSIBLE_COLLECTIONS_PATH=.*'
+    line: export ANSIBLE_COLLECTIONS_PATH="{{ ansible_env.HOME }}/.ansible/collections/ansible_collections"
+  tags: ansible
+
+- name: ansible | Configure Ansible collections path for ZSH
+  ansible.builtin.copy:
+    content: |
+      export ANSIBLE_COLLECTIONS_PATH="{{ ansible_env.HOME }}/.ansible/collections/ansible_collections"
+    dest: >-
+      {{ ansible_env.HOME }}/.oh-my-zsh/custom/ansible.zsh
+    mode: '0644'
+  tags: ansible

@@ -2,9 +2,9 @@
 - name: golang | Download Golang
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_golang_download_url }}
+      {{ dev_seat_golang_download_url }}
     checksum: >-
-      {{ devseat_golang_checksum }}
+      {{ dev_seat_golang_checksum }}
     dest: /tmp/go.linux-amd64.tar.gz
     owner: root
     group: root
@@ -17,7 +17,7 @@
   ansible.builtin.file:
     state: absent
     path: /opt/go
-  when: golang_download.changed # noqa: no-handler
+  when: golang_download.changed  # noqa: no-handler
   become: true
   tags: golang
 

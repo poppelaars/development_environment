@@ -1,0 +1,85 @@
+---
+- name: vscode | Create apt keyrings directory on Debian-based distributions
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+  tags: vscode
+
+- name: vscode | Install VScode Apt signing key on Debian-based distributions
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /etc/apt/keyrings/microsoft.asc
+    # checksum: false
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: vscode
+
+- name: vscode | Import vscode repository key on RHEL-based distributions
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://packages.microsoft.com/keys/microsoft.asc
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: vscode
+
+- name: vscode | Configure VScode repository on Debian-based distributions
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/microsoft.asc] https://packages.microsoft.com/repos/code stable main
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: vscode
+
+- name: vscode | Configure VScode repository on RHEL-based distributions
+  ansible.builtin.copy:
+    content: |
+      [code]
+      name=Visual Studio Code
+      baseurl=https://packages.microsoft.com/yumrepos/vscode
+      enabled=1
+      gpgcheck=1
+      gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+    dest: /etc/yum.repos.d/vscode.repo
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: vscode
+
+- name: vscode | Install VScode on Debian-based distributions
+  ansible.builtin.apt:
+    name: code
+    update_cache: true
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: vscode
+
+- name: vscode | Install VScode on RHEL-based distributions
+  ansible.builtin.dnf:
+    name: code
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: vscode
+
+- name: vscode | Install VScode extensions
+  ansible.builtin.shell:
+    cmd: |
+      code --install-extension {{ vscode_extension }} --force
+  changed_when: false
+  loop: >-
+    {{ dev_seat_vscode_extensions | default([]) }}
+  loop_control:
+    loop_var: vscode_extension
+    label: >-
+      {{ vscode_extension }}
+  when: is_wsl is false
+  tags: vscode

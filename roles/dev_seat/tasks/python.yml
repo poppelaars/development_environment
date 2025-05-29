@@ -1,0 +1,84 @@
+---
+- name: python | Install basic Python software/tools on Debian-based distributions
+  ansible.builtin.apt:
+    name:
+      - nodejs
+      - npm
+      - python3-pip
+      - python3-build
+      - python3-setuptools
+      - python3-paramiko
+      - python3-virtualenv
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts['os_family'] == "Debian"
+  tags: python
+
+- name: python | Install basic Python software/tools on RHEL-based distributions
+  ansible.builtin.dnf:
+    name:
+      - nodejs
+      - npm
+      - python3-pip
+      - python3-build
+      - python3-setuptools
+      - python3-paramiko
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: python
+
+- name: python | Install basic Python pip software/tools on RHEL-based distributions
+  ansible.builtin.pip:
+    name:
+      - virtualenv
+      - pip
+    state: latest  # noqa: package-latest
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: python
+
+- name: python | Download and install Pyright language server
+  community.general.npm:
+    name: pyright
+    global: true
+    state: present
+  become: true
+  tags: python
+
+- name: python | Configure Pip root certificate authorities for Bash on Ubuntu
+  ansible.builtin.lineinfile:
+    path: >-
+      {{ ansible_env.HOME }}/.bashrc
+    regexp: '^export PIP_CERT=.*'
+    line: export PIP_CERT="/etc/ssl/certs/ca-certificates.crt"
+  tags: python
+
+# - name: python | Configure Pip root certificate authorities for Bash on Centos
+#   ansible.builtin.lineinfile:
+#     path: >-
+#       {{ ansible_env.HOME }}/.bashrc
+#     regexp: '^export PIP_CERT=.*'
+#     line: export PIP_CERT="/etc/ssl/certs/ca-certificates.crt"
+#   tags: python
+
+- name: python | Configure Pip root certificate authorities for ZSH on Ubuntu
+  ansible.builtin.copy:
+    content: |
+      export PIP_CERT="/etc/ssl/certs/ca-certificates.crt"
+    dest: >-
+      {{ ansible_env.HOME }}/.oh-my-zsh/custom/pip-cert.zsh
+    mode: '0644'
+  changed_when: false
+  tags: python
+
+# - name: python | Configure Pip root certificate authorities for ZSH on Centos
+#   ansible.builtin.copy:
+#     content: |
+#       export PIP_CERT="/etc/ssl/certs/ca-certificates.crt"
+#     dest: >-
+#       {{ ansible_env.HOME }}/.oh-my-zsh/custom/pip-cert.zsh
+#     mode: '0644'
+#   changed_when: false
+#   tags: python

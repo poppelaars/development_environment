@@ -23,9 +23,9 @@
 - name: kubernetes | Download and install Minikube
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_minikube_download_url }}
+      {{ dev_seat_minikube_download_url }}
     # checksum: >-
-    #   {{ devseat_minikube_checksum }}
+    #   {{ dev_seat_minikube_checksum }}
     dest: /usr/local/bin/minikube
     owner: root
     group: root
@@ -33,28 +33,18 @@
   become: true
   tags: kubernetes
 
-# https://ubuntu.com/tutorials/install-a-local-kubernetes-with-microk8s#2-deploying-microk8s
-- name: kubernetes | Install MicroK8s on Debian-based distributions
-  community.general.snap:
-    name: microk8s
-    channel: latest/stable
-    classic: true
-    state: present
-  become: true
-  when: ansible_facts['os_family'] == "Debian"
-  tags: kubernetes
-
 - name: kubernetes | Download CRI-Dockerd for Debian-based distributions
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_cri_dockerd_deb_download_url }}
+      {{ dev_seat_cri_dockerd_deb_download_url }}
     # checksum: >-
-    #   {{ devseat_cri_dockerd_deb_checksum }}
+    #   {{ dev_seat_cri_dockerd_deb_checksum }}
     dest: /tmp/cri-dockerd_ubuntu-jammy_amd64.deb
     owner: root
     group: root
     mode: '0644'
   become: true
+  when: ansible_facts['os_family'] == "Debian"
   register: cri_dockerd_deb_download
   tags: kubernetes
 
@@ -63,20 +53,23 @@
     deb: /tmp/cri-dockerd_ubuntu-jammy_amd64.deb
     state: present
   become: true
-  when: ansible_facts['os_family'] == "Debian" and cri_dockerd_deb_download.changed # noqa: no-handler
+  when:
+    - ansible_facts['os_family'] == "Debian"
+    - cri_dockerd_deb_download.changed  # noqa: no-handler
   tags: kubernetes
 
 - name: kubernetes | Download CRI-Dockerd for RHEL-based distributions
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_cri_dockerd_rpm_download_url }}
+      {{ dev_seat_cri_dockerd_rpm_download_url }}
     # checksum: >-
-    #   {{ devseat_cri_dockerd_deb_checksum }}
+    #   {{ dev_seat_cri_dockerd_deb_checksum }}
     dest: /tmp/cri-dockerd-fc36.x86_64.rpm
     owner: root
     group: root
     mode: '0644'
   become: true
+  when: ansible_facts['os_family'] == "RedHat"
   register: cri_dockerd_rpm_download
   tags: kubernetes
 
@@ -85,15 +78,17 @@
     name: /tmp/cri-dockerd-fc36.x86_64.rpm
     state: present
   become: true
-  when: ansible_facts['os_family'] == "RedHat" and cri_dockerd_rpm_download.changed # noqa: no-handler
+  when:
+    - ansible_facts['os_family'] == "RedHat"
+    - cri_dockerd_rpm_download.changed  # noqa: no-handler
   tags: kubernetes
 
 - name: kubernetes | Download CNI-plugins
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_cni_plugins_download_url }}
+      {{ dev_seat_cni_plugins_download_url }}
     checksum: >-
-      {{ devseat_cni_plugins_checksum }}
+      {{ dev_seat_cni_plugins_checksum }}
     dest: /tmp/cni-plugins-linux-amd64.tgz
     owner: root
     group: root
@@ -106,7 +101,7 @@
   ansible.builtin.file:
     state: absent
     path: /opt/cni/bin
-  when: cni_plugins_download.changed # noqa: no-handler
+  when: cni_plugins_download.changed  # noqa: no-handler
   become: true
   tags: kubernetes
 
@@ -136,16 +131,16 @@
     dest: /opt/cni/bin
     owner: root
     group: root
-  when: cni_plugins_download.changed # noqa: no-handler
+  when: cni_plugins_download.changed  # noqa: no-handler
   become: true
   tags: kubernetes
 
 - name: kubernetes | Download and install Kubectl
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_kubectl_download_url }}
+      {{ dev_seat_kubectl_download_url }}
     checksum: >-
-      {{ devseat_kubectl_checksum }}
+      {{ dev_seat_kubectl_checksum }}
     dest: /usr/local/bin/kubectl
     owner: root
     group: root
@@ -156,9 +151,9 @@
 - name: kubernetes | Download Helm
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_helm_download_url }}
+      {{ dev_seat_helm_download_url }}
     checksum: >-
-      {{ devseat_helm_checksum }}
+      {{ dev_seat_helm_checksum }}
     dest: /tmp/helm-linux-amd64.tar.gz
     owner: root
     group: root
@@ -180,12 +175,20 @@
   become: true
   tags: kubernetes
 
+- name: kubernetes | Install Helm diff plugin
+  ansible.builtin.shell:
+    cmd: |
+      helm plugin install https://github.com/databus23/helm-diff
+  changed_when: false
+  failed_when: false
+  tags: kubernetes
+
 - name: kubernetes | Download K9S
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_k9s_download_url }}
+      {{ dev_seat_k9s_download_url }}
     # checksum: >-
-    #   {{ devseat_k9s_checksum }}
+    #   {{ dev_seat_k9s_checksum }}
     dest: /tmp/k9s_Linux_amd64.tar.gz
     owner: root
     group: root

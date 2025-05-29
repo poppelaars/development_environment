@@ -2,9 +2,9 @@
 - name: neovim | Download Neovim
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_neovim_download_url }}
+      {{ dev_seat_neovim_download_url }}
     checksum: >-
-      {{ devseat_neovim_checksum }}
+      {{ dev_seat_neovim_checksum }}
     dest: /tmp/nvim-linux64.tar.gz
     owner: root
     group: root
@@ -17,7 +17,7 @@
   ansible.builtin.file:
     state: absent
     path: /opt/neovim
-  when: neovim_download.changed # noqa: no-handler
+  when: neovim_download.changed  # noqa: no-handler
   become: true
   tags: neovim
 

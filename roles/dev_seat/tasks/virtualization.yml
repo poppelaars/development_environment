@@ -1,10 +1,16 @@
 ---
 - name: virtualization | Get CPU information from /proc/cpuinfo
-  ansible.builtin.shell: >-
-    egrep -c '(vmx|svm)' /proc/cpuinfo
+  ansible.builtin.shell:
+    cmd: |
+      #!/bin/bash
+      set -euo pipefail
+      # Check if the CPU supports virtualization
+      # vmx for Intel, svm for AMD
+      egrep -c '(vmx|svm)' /proc/cpuinfo || echo 0
+  args:
+    executable: /bin/bash
   register: virtualization_result
   changed_when: false
-  failed_when: false # egrep of 0 gives exit 1
   become: true
   tags: virtualization
 
@@ -20,6 +26,7 @@
     state: directory
     mode: '0755'
   become: true
+  when: ansible_facts['os_family'] == "Debian" and virtualization_support
   tags: virtualization
 
 - name: virtualization | Download Hashicorp public key for Debian-based distributions
@@ -28,6 +35,7 @@
     dest: /etc/apt/keyrings/hashicorp.asc
     mode: '0644'
   become: true
+  when: virtualization_support
   tags: virtualization
 
 - name: virtualization | Add Hashicorp repository on Debian-based distributions
@@ -40,6 +48,7 @@
     state: present
     update_cache: true
   become: true
+  when: ansible_facts['os_family'] == "Debian" and virtualization_support
   tags: virtualization
 
 - name: virtualization | Install virtualization on Debian-based distributions
@@ -148,19 +157,18 @@
 - name: virtualization | Install Vagrant plugins
   ansible.builtin.shell:
     cmd: |
-      vagrant plugin install {{ plugin.name }}-{{ plugin.version }}
-  loop:
-    - name: vagrant-mutate
-      version: 1.2.0
-    - name: vagrant-libvirt
-      version: 0.12.2
+      vagrant plugin install {{ plugin.name }} {{
+        '--plugin-version ' + plugin.version if 'version' in plugin }}
   loop_control:
     loop_var: plugin
     label: >-
       {%- if 'version' in plugin -%}
       {{ plugin.name }}=={{ plugin.version }}{%- else -%}
       {{ plugin.name }}{%- endif -%}
+  loop: >-
+    {{ dev_seat_vagrant_plugins }}
   become: true
+  when: virtualization_support
   changed_when: false
   tags: virtualization
 
@@ -183,12 +191,32 @@
   when: virtualization_support
   tags: virtualization
 
+- name: virtualization | Configure Vagrant home directory for Bash
+  ansible.builtin.lineinfile:
+    path: >-
+      {{ ansible_env.HOME }}/.bashrc
+    regexp: '^export VAGRANT_HOME=.*'
+    line: export VAGRANT_HOME="{{ ansible_env.HOME }}/.vagrant.d"
+  when: virtualization_support
+  tags: virtualization
+
+- name: virtualization | Configure Vagrant home directory for ZSH
+  ansible.builtin.copy:
+    content: |
+      export VAGRANT_HOME="{{ ansible_env.HOME }}/.vagrant.d"
+    dest: >-
+      {{ ansible_env.HOME }}/.oh-my-zsh/custom/vagrant-home.zsh
+    mode: '0644'
+  when: virtualization_support
+  tags: virtualization
+
 - name: virtualization | Configure Vagrant root certificate authorities for Bash
   ansible.builtin.lineinfile:
     path: >-
       {{ ansible_env.HOME }}/.bashrc
     regexp: '^export SSL_CERT_FILE=.*'
     line: export SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+  when: virtualization_support
   tags: virtualization
 
 - name: virtualization | Configure Vagrant root certificate authorities for ZSH

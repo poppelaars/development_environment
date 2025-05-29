@@ -1,0 +1,37 @@
+---
+- name: desktop | Install desktop on Debian-based distributions
+  ansible.builtin.apt:
+    pkg:
+      - ubuntu-desktop-minimal
+      - xrdp
+    state: present
+    update_cache: true
+  when: is_wsl is false
+  become: true
+  tags: desktop
+
+- name: desktop | Install desktop on RHEL-based distributions
+  ansible.builtin.dnf:
+    name: '@Server with GUI'
+    state: present
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: desktop
+
+- name: desktop | Get current systemd default
+  ansible.builtin.command: systemctl get-default
+  failed_when: false
+  changed_when: false
+  register: systemctl_default_target
+  become: true
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: desktop
+
+- name: desktop | Set default to graphical target
+  ansible.builtin.command: systemctl set-default graphical.target
+  changed_when: true
+  become: true
+  when:
+    - ansible_facts['os_family'] == "RedHat"
+    - "'graphical' not in systemdefault.stdout"
+  tags: desktop

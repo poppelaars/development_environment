@@ -1,8 +1,14 @@
 ---
-- name: Determine if we are on WSL (Windows Subsystem for Linux)
+- name: Determine if this is run on WSL (Windows Subsystem for Linux)
   ansible.builtin.stat:
     path: /proc/sys/fs/binfmt_misc/WSLInterop
   register: detect_is_wsl
+  tags: always
+
+- name: Set is_wsl fact
+  ansible.builtin.set_fact:
+    is_wsl: >-
+      {{ detect_is_wsl.stat.exists }}
   tags: always
 
 - name: Include task for basic configuration

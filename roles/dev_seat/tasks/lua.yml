@@ -2,9 +2,9 @@
 - name: lua | Download Lua language server
   ansible.builtin.get_url:
     url: >-
-      {{ devseat_lua_lsp_download_url }}
+      {{ dev_seat_lua_lsp_download_url }}
     # checksum: >-
-    #   {{ devseat_lua_lsp_checksum }}
+    #   {{ dev_seat_lua_lsp_checksum }}
     dest: /tmp/lua-language-server-linux-x64.tar.gz
     owner: root
     group: root

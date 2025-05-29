@@ -1,5 +1,5 @@
 ---
-- name: basic | Create /home/<user>/.ssh folder
+- name: basic | Create /home/<user>/.ssh directory
   ansible.builtin.file:
     path: >-
       {{ ansible_env.HOME }}/.ssh
@@ -7,12 +7,12 @@
     mode: '0755'
   tags: basic
 
-- name: basic | Create apt keyrings directory on Debian-based distributions
+- name: basic | Create /home/<user>/.local/bin directory
   ansible.builtin.file:
-    path: /etc/apt/keyrings
+    path: >-
+      {{ ansible_env.HOME }}/.local/bin
     state: directory
     mode: '0755'
-  become: true
   tags: basic
 
 - name: basic | Update all packages on Debian-based distributions
@@ -47,6 +47,7 @@
 - name: basic | Install basic software/tools on Debian-based distributions
   ansible.builtin.apt:
     name:
+      - apt-transport-https
       - bzip2
       - curl
       - gcc
@@ -89,12 +90,29 @@
   when: ansible_facts['os_family'] == "RedHat"
   tags: basic
 
+- name: basic | Check if oh-my-zsh is installed
+  ansible.builtin.stat:
+    path: >-
+      {{ ansible_env.HOME }}/.oh-my-zsh/oh-my-zsh.sh
+  register: oh_my_zsh_stat
+  tags: basic
+
 - name: basic | Install oh-my-zsh
   ansible.builtin.shell:
     cmd: |
       sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
   failed_when: false
   changed_when: false
+  when: not oh_my_zsh_stat.stat.exists
+  tags: basic
+
+- name: basic | Update oh-my-zsh
+  ansible.builtin.shell:
+    cmd: |
+      omz update
+  failed_when: false
+  changed_when: false
+  when: oh_my_zsh_stat.stat.exists
   tags: basic
 
 - name: basic | Install zsh-autosuggestions
@@ -104,7 +122,7 @@
       {{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-autosuggestions
     update: true
     version: >-
-      {{ devseat_zsh_autosuggestions_version_tag }}
+      {{ dev_seat_zsh_autosuggestions_version_tag }}
   tags: basic
 
 - name: basic | Configure Oh my Zsh ~/.zshrc
@@ -115,6 +133,7 @@
       plugins=(
         git
         ssh-agent
+        zsh-autosuggestions
       )
 
       source $ZSH/oh-my-zsh.sh
@@ -131,7 +150,7 @@
     mode: '0644'
   tags: basic
 
-- name: basic | Configure default sudo editor
+- name: basic | Configure default sudo editor for Bash
   ansible.builtin.lineinfile:
     path: >-
       {{ ansible_env.HOME }}/.bashrc
@@ -172,7 +191,7 @@
     name: >-
       {{ ansible_env.USER }}
     shell: >-
-      {{ devseat_default_shell }}
+      {{ dev_seat_default_shell }}
   become: true
   failed_when: false # TODO: Gives errors when ldap account.
   tags: basic

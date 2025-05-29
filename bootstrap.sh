@@ -31,6 +31,7 @@ elif [ "$DISTRO" = "ubuntu" ]; then
         python3-paramiko \
         python3-requests \
         ansible
+    sudo ansible-galaxy collection install community.general
 else
     echo "Unsupported Disto.";
     exit 1
