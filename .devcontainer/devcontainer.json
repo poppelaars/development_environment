@@ -1,0 +1,24 @@
+{
+    "name": "ansible-dev-container-codespaces",
+    "image": "ghcr.io/ansible/community-ansible-dev-tools:latest",
+    "containerUser": "root",
+    "runArgs": [
+        "--privileged",
+        "--device",
+        "/dev/fuse",
+        "--hostname=ansible-dev-container"
+    ],
+    "updateRemoteUserUID": true,
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "oderwat.indent-rainbow",
+                "redhat.ansible",
+                "redhat.vscode-yaml",
+                "shardulm94.trailing-spaces",
+                "streetsidesoftware.code-spell-checker",
+                "Artymaury.template-finder",
+            ]
+        }
+    }
+}

@@ -1,8 +1,14 @@
 {
+    "ansible.python.interpreterPath": "/usr/bin/python3",
+    "ansible.validation.lint.enabled": true,
+    "ansible.executionEnvironment.enabled": true,
+    "ansible.lightspeed.enabled": false,
+    "editor.guides.bracketPairs": true,
     "editor.rulers": [
         {
             "column": 80,
             "color": "#ff0000"
         },
-    ]
+    ],
+    "redhat.telemetry.enabled": false,
 }
